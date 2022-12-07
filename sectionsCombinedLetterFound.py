@@ -14,7 +14,7 @@ conf ='--psm 6 -l eng -c tessedit_char_whitelist="0123456789abcdefghijklmnopqrst
 
 
 roi = [
-    [(50, 1126), (770, 1240), 'text', 'Order ID'],
+    [(50, 1126), (770, 1240), 'text', 'Order Number'],
     [(50, 500), (260, 680), 'text', 'Name'],
     [(710, 500), (1050, 655), 'text', 'CNIC'], # perfect for SOF 7
     [(50, 550), (248, 720), 'text', 'Mobile'],
@@ -95,6 +95,7 @@ for j, y in enumerate(myPicList):
                                                 # plt.title(y+" "+r[3])
                                                 # plt.imshow(roi_field)
                                                 # plt.show()
+                                                orderid = 0
                                                 if r[3] == 'Order ID':
                                                     roi_field_text = tess.image_to_string(roi_field).strip()
                                                     print(roi_field_text)
@@ -152,7 +153,8 @@ for j, y in enumerate(myPicList):
                                                 plt.title(file_name+" "+r[3])
                                                 plt.imshow(text_named_roi_field)
                                                 plt.show()
-                                                imwrite(os.path.join(os.getcwd()+'/sof_test/parts/'+file_name+" "+r[3]+'.jpg'), text_named_roi_field)
+                                                if orderid: imwrite(os.path.join(os.getcwd()+'/sof_test/parts/'+orderid+" "+r[3]+'.jpg'), text_named_roi_field)
+                                                else: imwrite(os.path.join(os.getcwd()+'/sof_test/parts/'+file_name+" "+r[3]+'.jpg'), text_named_roi_field)
                                                 print(tess.image_to_string(roi_field).strip())
                                                 break
                 if found < 1:
@@ -171,3 +173,8 @@ for j, y in enumerate(myPicList):
                     else:f.write(str(data))
                 f.write('\n')
             counter+=1
+
+"""
+
+# imwrite(os.getcwd()+'/sof_test/completed/'+ file, angled)
+"""
