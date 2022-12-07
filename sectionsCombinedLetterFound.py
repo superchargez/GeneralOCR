@@ -10,14 +10,16 @@ import os
 
 path_to_exe = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 tess.pytesseract.tesseract_cmd = path_to_exe
-conf ='--psm 6 -l eng -c tessedit_char_whitelist="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ/ "'
+conf ='--psm 6 -l eng -c tessedit_char_whitelist="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ/ @."'
 
 
 roi = [
-    [(60, 500), (260, 680), 'text', 'Name'],
-    [(735, 500), (1050, 655), 'text', 'CNIC'], # perfect for SOF 7
-    [(76, 600), (248, 720), 'text', 'Mobile'],
-    [(710, 550), (920, 700), 'text', 'Email']
+    [(50, 1126), (770, 1240), 'text', 'Order ID'],
+    [(50, 500), (260, 680), 'text', 'Name'],
+    [(710, 500), (1050, 655), 'text', 'CNIC'], # perfect for SOF 7
+    [(50, 550), (248, 720), 'text', 'Mobile'],
+    [(710, 550), (920, 700), 'text', 'Email'],
+    # [(36, 2153), (810, 2310), 'image', 'Signature']
     ]
 
 def Border20p(myimage):
@@ -93,6 +95,16 @@ for j, y in enumerate(myPicList):
                                                 # plt.title(y+" "+r[3])
                                                 # plt.imshow(roi_field)
                                                 # plt.show()
+                                                if r[3] == 'Order ID':
+                                                    roi_field_text = tess.image_to_string(roi_field).strip()
+                                                    print(roi_field_text)
+                                                    text_named_roi_field = resized[b+r[0][1]-h:b+h+r[0][1], w+a+r[0][0]:w+a+r[0][0]+w+w+w+w]
+                                                    text = tess.image_to_string(text_named_roi_field).strip()
+                                                    text = text.replace(',', '').replace('.', '').replace('  ','').replace('\n', ' ')
+                                                    if text == '': text = 'empty'
+                                                    myData.append(text)
+                                                    print(f'text {text}')
+
                                                 if r[3] == 'Name':
                                                     roi_field_text = tess.image_to_string(roi_field).strip()
                                                     print(roi_field_text)
@@ -144,13 +156,13 @@ for j, y in enumerate(myPicList):
                                                 print(tess.image_to_string(roi_field).strip())
                                                 break
                 if found < 1:
+                    file_name = y.split('.')[0]
                     print(f'{r[3]} not found')
                     myData.append(f'{r[3]} not found')
-                    # print(tess.image_to_string(cropped))
-                    # imwrite(os.path.join(os.getcwd()+'/sof_test/parts/'+file_name+" "+r[3]+'.jpg'), cropped)
-                    # plt.title(f"Named roi_field: {r[3]}")
-                    # plt.imshow(cvtColor(cropped, cv.COLOR_RGB2BGR))
-                    # plt.show()
+                    imwrite(os.path.join(os.getcwd()+'/sof_test/parts/'+file_name+" "+r[3]+'.jpg'), cropped)
+                    plt.title(f"Named roi_field: {r[3]}")
+                    plt.imshow(cvtColor(cropped, cv.COLOR_RGB2BGR))
+                    plt.show()
             
             with open('homeCodezOutput.csv', 'a+') as f:
                 for i, data in enumerate(myData):
@@ -159,8 +171,3 @@ for j, y in enumerate(myPicList):
                     else:f.write(str(data))
                 f.write('\n')
             counter+=1
-
-"""
-
-# imwrite(os.getcwd()+'/sof_test/completed/'+ file, angled)
-"""
