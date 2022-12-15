@@ -10,9 +10,9 @@ import sqlite3
 conn = sqlite3.connect('testOCRdatabase.sqlite')
 c = conn.cursor()
 # create database with 6 headings (columns)
-c.execute("DROP TABLE IF EXISTS images")
+# c.execute("DROP TABLE IF EXISTS images")
 c.execute("""CREATE TABLE IF NOT EXISTS textElements (
-Image_name,
+Image_name text,
 Order_Number text,
 Customer_name text,
 CNIC text,
@@ -25,7 +25,7 @@ path_to_exe = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 tess.pytesseract.tesseract_cmd = path_to_exe
 # obtained regions of interests from ROI function in other python file
 roi = [
-    [(50, 1126), (770, 1240), 'text', 'Order Number'],
+    [(50, 1126), (770, 1240), 'text', 'Order'],
     [(50, 500), (260, 680), 'text', 'Name'],
     [(710, 500), (1050, 655), 'text', 'CNIC'], # perfect for SOF 7
     [(50, 550), (248, 720), 'text', 'Mobile'],
@@ -42,63 +42,20 @@ def Border20p(myimage):
 sof_folder = os.path.join(os.getcwd()+'/sof_test')
 # list everything in the folder above
 myPicList = os.listdir(sof_folder)
-
-# if the file contianig data does not exist then create and it with columns from ROI above
-if not os.path.isfile('homeCodezOutput.csv'):
-    with open('homeCodezOutput.csv', 'a+') as f:
-        f.write('ID'+',')
-        for i, r in enumerate(roi):
-            if i < len(r):
-                f.write(str(roi[i][3])+',')
-            if i == len(r):
-                f.write(roi[i][3]+'\n')
-                break
-
-# if file already exists but is corrupted then this loop runs
-with open('homeCodezOutput.csv') as f:
-    l = f.readline()
-if len(l) < len(roi): 
-    with open('homeCodezOutput.csv', 'a+') as f:
-        if 'ID' not in l:
-            f.write('ID'+',')
-            # ID has to be the first column, so continue iterating through other ROI ids
-            for i, r in enumerate(roi):
-                if i < len(r):
-                    f.write(str(roi[i][3])+',')
-                if i == len(r):
-                    f.write(roi[i][3]+'\n')
-                    break
-
-def load_csv(filename):
-    """Read csv file without pandas, it is faster and does not give errors as it reads unicode beyond 8bit """
-    data = list()
-    # Open file in read mode
-    file = open(filename,"r")
-    # Reading file
-    csv_reader = reader(file)
-    for row in csv_reader:
-        if not row:
-            continue
-        data.append(row)
-    return data
-# read csv file 
-df = load_csv("homeCodezOutput.csv")
-# create list of all images in the file to check if the file has already been worked on
-# imgs = [x[0] for x in df]
-checklist = list()
-for l in df:
-    if l[0]!='ID':
-        checklist.append(l[0])
-
-lengthdfindex = len(checklist)
 # best configuration that I found for tesseract for this project
 config = '-l eng --psm 6 -c tessedit_char_whitelist=" ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.0123456789@"'
+
+checkfile = list()
+c.execute("SELECT  * FROM textElements")
+files = c.fetchall()
+# print(files)
+for f in files:
+    # print(f[0])
+    checkfile.append(f[0])
 # loop through list of items in the folder
 for j, y in enumerate(myPicList):
     # check if the image information already exists and only use images with 'SOF' in their name
-    if y not in checklist and 'SOF' in y:
-            with open('homeCodezOutput.csv', 'a+') as f:
-                f.write(y + ',')
+    if y.split('.')[0] not in checkfile and 'SOF' in y:
             img = cv.imread(sof_folder + "/" + y, 1)
             # pixels calculation will come later in use, when all images are exact same size i.e. printed straight from CRM
             pixelThreshold = 1100
@@ -138,7 +95,7 @@ for j, y in enumerate(myPicList):
                                         roi_field = resized[b+r[0][1]:b+h+r[0][1], a+r[0][0]:w+a+r[0][0]]
                                         roi_field = Border20p(roi_field)
                                         # every ROI has different coordinates for their fields where text is to be found, so everyone is separately treated
-                                        if r[3] == 'Order ID':
+                                        if r[3] == 'Order':
                                             # remove unncessary spaces as well as various unprintable characters and even newline characters for the name of the ROI
                                             roi_field_text = tess.image_to_string(roi_field, config=config).strip().replace('\n', ' ')
                                             # the estimated frame of the image where the desired text is to be found
@@ -192,6 +149,7 @@ for j, y in enumerate(myPicList):
                                             # print(f'{r[3]} {text}')
                                         
                                         file_name = y.split('.')[0]
+                                        # print(file_name)
                                         # plt.title(file_name+" "+r[3])
                                         # plt.imshow(text_named_roi_field)
                                         # plt.show()
@@ -210,15 +168,7 @@ for j, y in enumerate(myPicList):
                     plt.imshow(cvtColor(cropped, cv.COLOR_RGB2BGR))
                     plt.show()
             
-            # save all strings to the csv file
-            with open('homeCodezOutput.csv', 'a+') as f:
-                for i, data in enumerate(myData):
-                    print(type(data))
-                    if i+2 < len(df[0]):
-                        f.write(str(data)+',')
-                    else:f.write(str(data))
-                f.write('\n')
-            c.execute("INSERT INTO textElements VALUES (?, ?, ?, ?, ?, ?)", (y, *myData))
+            c.execute("INSERT INTO textElements VALUES (?, ?, ?, ?, ?, ?)", (file_name, *myData))
 conn.commit()
 
 c.execute("SELECT rowid, * FROM textElements")
