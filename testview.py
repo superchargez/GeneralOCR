@@ -5,8 +5,19 @@ import tkinter.ttk as ttk
 #import library for handling SQLite database
 import sqlite3
 # https://www.krazyprogrammer.com/2020/12/how-to-search-data-from-sqlite-in.html
+import os
 #defining function for creating GUI Layout
 conn=sqlite3.connect("testOCRdatabase.sqlite")
+cursor = conn.cursor()
+cursor.execute("""CREATE TABLE IF NOT EXISTS textElements (
+Image_name text,
+Order_Number text,
+Customer_name text,
+CNIC text,
+Mobile text,
+Email text
+)""")
+
 def DisplayForm():
     #creating window
     display_screen = Tk()
@@ -16,13 +27,14 @@ def DisplayForm():
     display_screen.title("PTCL SOF OCR Database")
     global tree
     global SEARCH
+    global myButton
     SEARCH = StringVar()
     #creating frame
     TopViewForm = Frame(display_screen, width=600, bd=1, relief=SUNKEN)
     TopViewForm.pack(side=TOP, fill=X)
     LeftViewForm = Frame(display_screen, width=600)
     LeftViewForm.pack(side=LEFT, fill=Y)
-    MidViewForm = Frame(display_screen, width=600)
+    MidViewForm = Frame(display_screen, width=1000)
     MidViewForm.pack(side=RIGHT)
     lbl_text = Label(TopViewForm, text="SQLite Database SOF Records", font=('verdana', 18), width=600,bg="#1C2833",fg="white")
     lbl_text.pack(fill=X)
@@ -32,9 +44,11 @@ def DisplayForm():
     search = Entry(LeftViewForm, textvariable=SEARCH, font=('verdana', 15), width=10)
     search.pack(side=TOP, padx=10, fill=X)
     btn_search = Button(LeftViewForm, text="Search", command=SearchRecord)
-    btn_search.pack(side=TOP, padx=10, pady=10, fill=X)
+    btn_search.pack(side=TOP, padx=10, pady=5, fill=X)
     btn_search = Button(LeftViewForm, text="View All", command=DisplayData)
-    btn_search.pack(side=TOP, padx=10, pady=10, fill=X)
+    btn_search.pack(side=TOP, padx=10, pady=5, fill=X)
+    myButton = Button(LeftViewForm, text="Scan", command=Scan)
+    myButton.pack(side=TOP, padx=10, pady=5, fill=X)
 
     #setting scrollbar
     scrollbarx = Scrollbar(MidViewForm, orient=HORIZONTAL)
@@ -46,20 +60,26 @@ def DisplayForm():
     scrollbarx.config(command=tree.xview)
     scrollbarx.pack(side=BOTTOM, fill=X)
     #setting headings for the columns
-    tree.heading('Image_name', text="Student Id", anchor=W)
-    tree.heading('Order_Number', text="Name", anchor=W)
-    tree.heading('Customer_name', text="Contact", anchor=W)
-    tree.heading('CNIC', text="Email", anchor=W)
-    tree.heading('Mobile', text="Rollno", anchor=W)
-    tree.heading('Email', text="Branch", anchor=W)
+    tree.heading('Image_name', text="Image Name", anchor=W)
+    tree.heading('Order_Number', text="Order Number", anchor=W)
+    tree.heading('Customer_name', text="Custommer Name", anchor=W)
+    tree.heading('CNIC', text="CNIC", anchor=W)
+    tree.heading('Mobile', text="Mobile", anchor=W)
+    tree.heading('Email', text="Email", anchor=W)
     #setting width of the columns
     tree.column('#0', stretch=NO, minwidth=0, width=0)
     tree.column('#1', stretch=NO, minwidth=0, width=100)
     tree.column('#2', stretch=NO, minwidth=0, width=150)
-    tree.column('#3', stretch=NO, minwidth=0, width=80)
+    tree.column('#3', stretch=NO, minwidth=0, width=180)
     tree.column('#4', stretch=NO, minwidth=0, width=120)
     tree.pack()
     DisplayData()
+
+def Scan():
+    myButton['state'] = DISABLED
+    print(os.getcwd())
+    os.system("python '/home/julia/Documents/learn/python/tess/OCR_with_DB.py'")
+
 #function to search data
 def SearchRecord():
     #checking search text is empty or not
