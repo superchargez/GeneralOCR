@@ -89,7 +89,7 @@ def SearchRecord():
         #open database
         conn = sqlite3.connect('testOCRdatabase.sqlite')
         #select query with where clause
-        cursor=conn.execute("SELECT * FROM textElements WHERE (Image_name || Order_number || CNIC || Mobile || Email) LIKE?", ('%' + str(SEARCH.get()) + '%',))
+        cursor=conn.execute("SELECT * FROM textElements WHERE (Image_name || Order_number || CNIC || Mobile || Email || Customer_name) LIKE?", ('%' + str(SEARCH.get()) + '%',))
         #fetch all matching records
         fetch = cursor.fetchall()
         #loop for displaying all records into GUI
