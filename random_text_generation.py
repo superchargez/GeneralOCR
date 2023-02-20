@@ -31,69 +31,88 @@ def randomword(length):
 # =============================================================================
 # print(np.random.choice(extension, p = probas))
 
-def random_email_gen(length):
+def random_email_gen():
     alpha = sorted_alphabets
     id = ''
-    for i in range(0,length):
+    email_len = int(np.random.rand()*20)
+    for i in range(5,20):
         id += np.random.choice(alpha)
+        if len(id) > email_len: break
     id += np.random.choice(organization)
     id += np.random.choice(extension)
-    print(id)
+    # print(id)
     return id
-
-def random_name_gen(first_len, last_len):
+#%%
+def random_name_gen():
     # strings = "".join(ch for ch in alphabets.translate(alphabets.maketrans("", "", digits)) if ch.isalnum())
     # strings = sorted("".join(ch for ch in
     # alphabets.translate(alphabets.maketrans("", "", digits))
     # if ch.isalnum()))
     first_name = ''
-    for i in range(5,np.random.randint(first_len)):
+    first_name_len = int(np.random.rand()*10)
+    for i in range(5,10):
         first_name += np.random.choice(strings)
+        if len(first_name) > first_name_len: break
     last_name = ''
-    for i in range(5, np.random.randint(last_len)):
+    last_name_len = int(np.random.rand()*10)
+    for i in range(5,10):
         last_name += np.random.choice(strings)
-    print(first_name, last_name)
+        if len(last_name) > last_name_len: break
     user_name = first_name + " "+ last_name
     return user_name
-    
+#%% 
 
-def random_cnic_gen(m,l):
+def random_cnic_gen():
     cnic = ""
-    cnic += str(np.random.randint(1,10))
-    cnic += '-'
-    for i in range(m):
+    # cnic += str(np.random.randint(1,10))
+    # cnic += '-'
+    for i in range(5):
         cnic += str(np.random.randint(1,10))
     cnic += '-'
-    for i in range(l):
+    for i in range(7):
         cnic += str(np.random.randint(1,10))
     cnic += '-'
     cnic += str(np.random.randint(1,10))
-    print(cnic)
+    # print(cnic)
     return cnic
 
-def random_oderID_gen(n):
+def random_oderID_gen():
     orderID = ""
     orderID += str(np.random.randint(1,10))
     orderID += '-'
-    for i in range(n):
+    for i in range(12):
         orderID += str(np.random.randint(1,10))
-    print(orderID)
+    # print(orderID)
     return orderID
 
-def random_phone_gen(n):
+def random_phone_gen():
     phone = "03"
     for i in range(2):
         phone += str(np.random.randint(1,10))
     phone += '-'
-    for i in range(n):
+    for i in range(7):
         phone += str(np.random.randint(1,10))
-    print(phone)
+    # print(phone)
     return phone
+
+def gen_texts():
+    return random_email_gen(), random_name_gen(), random_cnic_gen(), random_phone_gen(), random_oderID_gen()
+    
 
 # for i in range(10):
 #     random_email_gen(10)
-random_email_gen(15)
-random_name_gen(15, 15)
-random_cnic_gen(5, 7)
-random_oderID_gen(12)
-random_phone_gen(7)
+# =============================================================================
+# def gen_texts(n):
+#     texts = []
+#     for i in range(n):
+#         # random_email_gen(15)
+#         # random_name_gen(15, 15)
+#         # random_cnic_gen(5, 7)
+#         # random_oderID_gen(12)
+#         # random_phone_gen(7)
+#         # texts.append([random_email_gen(10), random_name_gen(), random_cnic_gen(), random_oderID_gen(), random_phone_gen()])
+#     return texts
+# 
+# =============================================================================
+# gen_texts(1)[0][1][1]
+# np.savetxt('data.csv', ("email", "name", "cnic", "orderID", "phone"), delimiter=',')
