@@ -1,19 +1,21 @@
 import numpy as np, os
 import cv2
-from cv2 import imshow, waitKey
-image = cv2.imread('test.png',cv2.IMREAD_UNCHANGED)
-positions = [(220,590), (1160, 600), (270, 650), (920, 650), (240, 1240)]
-path = r"generated_SOF/"
-for i in range(1,5):
-    for position in positions:
+import randomTextGenerator as gn
+
+positions = [(1581, 835), (290,830), (1223, 915), (390, 914), (330, 1770)]
+save_path = r"generated_SOF/"
+for i in range(3):
+    image_path = r"C:\Users\PTCL\projects\ocr\sof_test\BLANK S OF.jpg"
+    image = cv2.imread(image_path,cv2.IMREAD_UNCHANGED)
+    texts = gn.gen_texts()
+    for j, position in enumerate(positions):
         cv2.putText(
             image, #numpy array on which text is written
-            "Python Examples", #text
+            texts[j], #text
             position, #position at which writing has to start
             cv2.FONT_HERSHEY_SIMPLEX, #font family
-            .8, #font size
-            (209, 80, 0, 255), #font color
+            1.7, #font size
+            (0, 0, 0, 255), #font color
             2) #font stroke
-    # imshow('output',output)
-    # waitKey(0)
-    cv2.imwrite(os.path.join(path, 'output'+str(i)+".png"), image)
+
+    cv2.imwrite(os.path.join(save_path, 'output'+str(i)+".png"), image)
