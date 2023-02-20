@@ -96,8 +96,8 @@ def random_phone_gen():
     return phone
 
 def gen_texts():
-    return random_email_gen(), random_name_gen(), random_cnic_gen(), random_phone_gen(), random_oderID_gen()
-    
+    return random_name_gen(), random_cnic_gen(), random_email_gen(), random_phone_gen(), random_oderID_gen()
+
 
 # for i in range(10):
 #     random_email_gen(10)
