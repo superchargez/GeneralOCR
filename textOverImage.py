@@ -1,8 +1,9 @@
 import numpy as np, os
 import cv2
+from cv2 import imshow, waitKey
 import randomTextGenerator as gn
 
-positions = [(1581, 835), (290,830), (1223, 915), (390, 914), (330, 1770)]
+positions = [(290,830), (1581, 835), (1223, 915), (390, 914), (330, 1770)]
 save_path = r"generated_SOF/"
 for i in range(3):
     image_path = r"C:\Users\PTCL\projects\ocr\sof_test\BLANK S OF.jpg"
@@ -19,3 +20,5 @@ for i in range(3):
             2) #font stroke
 
     cv2.imwrite(os.path.join(save_path, 'output'+str(i)+".png"), image)
+texts = gn.gen_texts()
+print(texts)
