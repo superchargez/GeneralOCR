@@ -1,6 +1,5 @@
 #%%
 import cv2, easyocr, os
-import matplotlib.pyplot as plt
 import sizes
 ft = sizes.p768
 reader = easyocr.Reader(['en'], detector='DB', recognizer = 'Transformer', gpu=False)
@@ -28,6 +27,8 @@ checklist = [f[5] for f in c.fetchall()]
 #%%
 for image in images:
     img = cv2.imread(os.path.join(path,image), 1)
+    y, x, channels = img.shape
+    img = cv2.resize(img, (x,y))
     orderID =  img[ft[4][0][1]:ft[4][1][1],ft[4][0][0]:ft[4][1][0]]
     ID = reader.readtext(orderID)[0][1]
     if ID in checklist: continue
@@ -36,9 +37,8 @@ for image in images:
         textoutput = reader.readtext(cropped)[0][1]
         mydata.append(textoutput)
         print(textoutput)
-        # plt.imshow(cropped)
-        # plt.show()
     c.execute("INSERT INTO textElements VALUES (?, ?, ?, ?, ?, ?)", (image, *mydata))
     mydata = []
 conn.commit()
 conn.close()
+#%%
