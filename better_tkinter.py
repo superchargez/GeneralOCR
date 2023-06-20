@@ -24,22 +24,36 @@ def display_images(event):
 
     sections = ["Name", "CNIC", "Mobile", "Email", "Order"]
 
+    # Calculate the max width and height of images
+    max_widths = [0, 0]
+    max_heights = [0, 0]
     for i, section in enumerate(sections):
-        img_path = os.path.join("sof_test/parts", f"{image_name}_{section}.jpg")
+        img_path = os.path.join("sof_test/parts", f"{image_name.split('.')[0]} {section}.jpg")
         img = Image.open(img_path)
-        img.thumbnail((150, 150))
-        photo = ImageTk.PhotoImage(img)
+        column = i % 2
+        max_widths[column] = max(max_widths[column], img.width)
+        max_heights[column] = max(max_heights[column], img.height)
+
+    for i, section in enumerate(sections):
+        img_path = os.path.join("sof_test/parts", f"{image_name.split('.')[0]} {section}.jpg")
+        img = Image.open(img_path)
 
         row = i // 2
         column = i % 2
+        new_width = max_widths[column]
+        new_height = max_heights[column]
+
+        img = img.resize((new_width, new_height))
+        photo = ImageTk.PhotoImage(img)
 
         label = Label(image_window, text=section, font=('verdana', 12))
-        label.grid(row=row * 2, column=column)
+        label.grid(row=row * 2, column=column, sticky='nsew')
         image_label = Label(image_window, image=photo)
         image_label.photo = photo  # Store the PhotoImage instance as an attribute
-        image_label.grid(row=row * 2 + 1, column=column)
+        image_label.grid(row=row * 2 + 1, column=column, sticky='nsew')
 
     image_window.mainloop()
+
 
 def DisplayForm():
     display_screen = Tk()
