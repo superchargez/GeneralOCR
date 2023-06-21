@@ -4,20 +4,25 @@ import os
 import matplotlib.pyplot as plt
 import sqlite3
 import re
-
+import sizes
 save_folder_path = 'sof_test/parts'
 
 def ocr_on_image(image_path, sections, save_folder_path):
     image = Image.open(image_path)
-    image = image.resize((990, 1400))
     image = image.convert('L')
+    image = image.resize((990, 1400))
     data = []
     for i, section in enumerate(sections):
         x1, y1 = section[0]
         x2, y2 = section[1]
         cropped_image = image.crop((x1, y1, x2, y2))
-        cropped_image.save(os.path.join(save_folder_path, f"{os.path.basename(image_path).split('.')[0]}_{section[3]}.jpg"))
+        cropped_image.save(os.path.join(save_folder_path, f"{os.path.basename(image_path).split('.')[0]} {section[3]}.jpg"))
         if section[3] in ['Mobile', 'CNIC']:
+            text = pytesseract.image_to_string(cropped_image, config='outputbase digits -c tessedit_char_whitelist=0123456789-')
+        else:
+            text = pytesseract.image_to_string(cropped_image)
+        text = ' '.join(text.split())
+        if section[3] in ['Order']:
             text = pytesseract.image_to_string(cropped_image, config='outputbase digits -c tessedit_char_whitelist=0123456789-')
         else:
             text = pytesseract.image_to_string(cropped_image)
@@ -33,19 +38,14 @@ def ocr_on_image(image_path, sections, save_folder_path):
             text = ''.join([c for c in text if c.isalpha() or c.isspace()])
         data.append(text.strip())
         print(f"{section[3]}: {text}")
-        plt.imshow(cropped_image)
-        plt.title(f"{section[3]}\n\n{os.path.basename(image_path)}")
-        plt.show()
+        # plt.imshow(cropped_image)
+        # plt.title(f"{section[3]}\n\n{os.path.basename(image_path)}")
+        # plt.show()
     return data
 
 
 folder_path = 'resized'
-sections = [[(118, 303), (409, 332), 'text', 'Name'],
-            [(630, 299), (931, 330), 'text', 'CNIC'],
-            [(151, 337), (408, 365), 'text', 'Mobile'],
-            [(488, 338), (937, 365), 'text', 'Email'],
-            [(129, 662), (417, 706), 'text', 'Order']]
-
+sections = sizes.p1400d
 conn = sqlite3.connect('OCRdatabase.db')
 c = conn.cursor()
 c.execute("""CREATE TABLE IF NOT EXISTS textElements (
@@ -67,5 +67,8 @@ for filename in os.listdir(folder_path):
             if c.fetchone() is None:
                 c.execute("INSERT INTO textElements VALUES (?, ?, ?, ?, ?, ?)", (filename, data[4], data[0], data[1], data[2], data[3]))
 
-conn.commit()
+# conn.commit()
 conn.close()
+
+import sys
+print(sys.executable)
