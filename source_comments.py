@@ -17,7 +17,6 @@ image_counter = 1  # Initialize a counter for image filenames
 def source():
     global image_counter
     for img_name in os.listdir(imgdir):
-        # if img_name.endswith('c.png'):
         if img_name.endswith(('c.png', 'r.png')):
             img = cv2.imread(os.path.join(imgdir, img_name), 0)
             if img_name.endswith('r.png'):
@@ -26,13 +25,13 @@ def source():
             for region in region:
                 region = img[region[0][1]:region[1][1], region[0][0]:region[1][0]]
                 text = pytesseract.image_to_string(region, config=config)
-                ic(text)
+                # ic(text)
                 logo_name = logo_matcher.logo_match(region)
-                text = corrections.corrected(text)
+                source_name = corrections.corrected_source(text) # text2source_name
                 # Extract the social media platform name from the logo filename
                 platform_name = os.path.splitext(logo_name)[0]
                 # Extract the source name from the text
-                source_name = re.search(r'Sources\s*(.*)', text).group(1)
+                # source_name = re.search(r'Sources\s*(.*)', text).group(1)  # commented out here koz mentioned in corrections
                 # Combine the platform name and source name
                 # source = f'{platform_name} {source_name}'
                 source = platform_name +" " + source_name
