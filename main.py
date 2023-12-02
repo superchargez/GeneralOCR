@@ -1,63 +1,78 @@
-import cv2, os, pytesseract
+import streamlit as st
 import pandas as pd
-import corrections, logo_matcher
-from config import imgdir, config, savedir, image_counter
-from regions import *
-from icecream import ic
-from regions import replies, comments
-import pandas as pd
+from PIL import Image
+import ocr
+import outputter
+from config import logos_dir
+# Load the logo from the file
+logo = Image.open(f'{logos_dir}/ptcl.png')
 
-def process_image(img_name, region_info, correction_function=None):
-    temp_dict = {}
-    img = cv2.imread(os.path.join(imgdir, img_name), 0)
-    region = img[region_info[0][1]:region_info[1][1], region_info[0][0]:region_info[1][0]]
-    text = pytesseract.image_to_string(region, config=config)
-    if correction_function is not None:
-        if correction_function.__name__ == 'corrected_source':
-            source_name = corrections.corrected_source(text)
-            logo_name = logo_matcher.logo_match(region)
-            platform_name = os.path.splitext(logo_name)[0]
-            dict = platform_name +" " + source_name
-            temp_dict['Source'] = dict
-        elif correction_function.__name__ == 'corrected_date_comments':
-            date, completed_items = correction_function(text)
-            temp_dict['Date'] = date
-            temp_dict['Completed Items'] = completed_items
-        else:
-            dict = correction_function(text)
-            temp_dict[region_info[3]] = dict
-    else:
-        dict = corrections.corrected_replies(text)
-        if img_name.endswith('r.png'):
-            temp_dict['Replies'] = dict
-        else:
-            temp_dict['Comments'] = dict
-    temp_dict['Image Name'] = img_name
-    temp_dict['Image Type'] = 'Replies' if img_name.endswith('r.png') else 'Comments'
-    # ic(temp_dict)
-    cv2.imshow('img', region)
-    cv2.waitKey(0)
-    return temp_dict
+# Display the logo in the sidebar
+st.sidebar.image(logo, use_column_width=False)
 
-df = pd.DataFrame()
-for img_name in os.listdir(imgdir):
-    if img_name.endswith('.png'):
-        result_dict = {}  # Reset the dictionary for each new image
-        if img_name.endswith('r.png'):
-            result_dict.update(process_image(img_name, replies[0], corrections.corrected_date_of_replies))
-            result_dict.update(process_image(img_name, replies[1], corrections.corrected_source))
-            result_dict.update(process_image(img_name, replies[2]))  # No correction function for replies
-            result_dict.update(process_image(img_name, replies[3], corrections.corrected_time))
-        elif img_name.endswith('c.png'):
-            result_dict.update(process_image(img_name, comments[0], corrections.corrected_date_comments))
-            result_dict.update(process_image(img_name, comments[1], corrections.corrected_source))
-        # Convert the dictionary to a DataFrame and append it to the main DataFrame
-        ic(result_dict)
-        temp_df = pd.DataFrame(result_dict, index=[0])
-        df = pd.concat([df, temp_df], ignore_index=True)
+# Load the DataFrame from the CSV file
+df = pd.read_csv('output.csv')
 
-# Set 'Date' as the index and save the DataFrame to a CSV file
-df.set_index('Date', inplace=True)
-df.to_csv('input.csv')
+# Sidebar controls
+st.sidebar.header('Control Buttons')
+run_ocr = st.sidebar.button('RUN OCR', key='run_ocr')
+generate_csv = st.sidebar.button('Generate CSV', key='generate_csv')
+# browse_images = st.sidebar.button('Browse Images', key='browse_images')
 
-# 21r 77=7, 36c 14=4, 45c 111=m1, 50c 111=m1, 52c 13=B, 
+st.sidebar.header('Data Types')
+show_comments = st.sidebar.checkbox('Comments', value=True, key='show_comments')
+show_replies = st.sidebar.checkbox('Replies', value=True, key='show_replies')
+show_time = st.sidebar.checkbox('Time', value=True, key='show_time')
+
+# Run maintain.py when the OCR button is clicked
+if run_ocr:
+    # st.write('Running OCR...')
+    ocr.ocr()  # assuming maintain.py has a function called run()
+    # st.write('OCR completed.')
+
+# Run outputter.py when the Generate CSV button is clicked
+if generate_csv:
+    # st.write('Generating CSV...')
+    outputter.outputter()  # assuming outputter.py has a function called run()
+    # st.write('CSV generation completed.')
+
+# Filter the DataFrame based on the checkboxes
+if not show_comments:
+    df = df.loc[:, ~df.columns.str.contains('Comments')]
+if not show_replies:
+    df = df.loc[:, ~df.columns.str.contains('Replies')]
+if not show_time:
+    df = df.loc[:, ~df.columns.str.contains('Time')]
+st.header('Select Groups')
+# Define the networks and accounts
+networks = ['facebook', 'twitter', 'instagram', 'linkedin']
+accounts = ['Ufone', 'Upaisa', 'Corporate']
+
+# Create a row of logos and checkboxes
+logos_and_checkboxes = st.columns(len(networks))
+checkboxes_dict = {}
+for i, network in enumerate(networks):
+    logo = Image.open(f'{logos_dir}/{network.lower()}.png')
+    logos_and_checkboxes[i].image(logo, use_column_width=False)
+    checkbox = logos_and_checkboxes[i].checkbox(network, value=True, key=f'{network}_checkbox')  # Added a unique key for each checkbox
+    checkboxes_dict[network] = checkbox
+
+# Create checkboxes for the accounts in the sidebar
+st.sidebar.header('Choose Accounts')
+account_checkboxes_dict = {}
+for account in accounts:
+    checkbox = st.sidebar.checkbox(account, value=True, key=f'{account}_checkbox')  # Added a unique key for each checkbox
+    account_checkboxes_dict[account] = checkbox
+
+# Filter the DataFrame based on the checkboxes at the bottom
+for network, checkbox in checkboxes_dict.items():
+    if not checkbox:
+        df = df.loc[:, ~df.columns.str.contains(network)]
+
+# Filter the DataFrame based on the account checkboxes
+for account, checkbox in account_checkboxes_dict.items():
+    if not checkbox:
+        df = df.loc[:, ~df.columns.str.contains(account)]
+
+# Main DataFrame display
+st.dataframe(df)
